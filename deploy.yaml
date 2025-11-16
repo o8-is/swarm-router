@@ -54,7 +54,7 @@ services:
       - --resume
 
   poller:
-    image: octalmage/swarm-caddy-poller:0.1.8
+    image: octalmage/swarm-caddy-poller:0.1.9
     depends_on:
       - bee
       - caddy
