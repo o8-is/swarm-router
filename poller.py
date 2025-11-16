@@ -75,7 +75,6 @@ def build_caddy_config(mappings):
     return {
         "apps": {
             "http": {"servers": {"main": {
-                "listen": [":80"],
                 "routes": routes
             }}}
         }
@@ -91,7 +90,6 @@ def build_warmup_config():
     return {
         "apps": {
             "http": {"servers": {"main": {
-                "listen": [":80"],
                 "routes": [{
                     "handle": [{
                         "handler": "static_response",
