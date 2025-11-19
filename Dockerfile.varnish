@@ -1,0 +1,5 @@
+FROM varnish:7.4
+
+COPY --chown=varnish:varnish default.vcl /etc/varnish/default.vcl
+
+EXPOSE 8080 6081

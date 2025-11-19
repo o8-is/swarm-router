@@ -12,13 +12,13 @@ services:
         as: 1633
         to:
           - global: false
-          - service: caddy
+          - service: varnish
           - service: poller
       - port: 1634
         as: 1634
         to:
           - global: false
-          - service: caddy
+          - service: varnish
           - service: poller
     env:
       - BEE_API_ADDR=:1633
@@ -40,6 +40,11 @@ services:
         to:
           - global: true
             ip: web-ip
+      - port: 443
+        as: 443
+        to:
+          - global: true
+            ip: web-ip
       - port: 2019
         as: 2019
         to:
@@ -53,8 +58,33 @@ services:
       - run
       - --resume
 
+  varnish:
+    image: octalmage/swarm-varnish:0.1.5
+    expose:
+      - port: 8080
+        as: 8080
+        to:
+          - global: false
+          - service: caddy
+      - port: 6081
+        as: 6081
+        to:
+          - global: false
+    env:
+      - VARNISH_SIZE=256M
+    command:
+      - varnishd
+    args:
+      - -F
+      - -a
+      - :8080
+      - -f
+      - /etc/varnish/default.vcl
+      - -s
+      - malloc,256M
+
   poller:
-    image: octalmage/swarm-caddy-poller:0.1.9
+    image: octalmage/swarm-caddy-poller:0.4.1
     depends_on:
       - bee
       - caddy
@@ -87,6 +117,14 @@ profiles:
           size: 512Mi
         storage:
           - size: 1Gi
+    varnish:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 512Mi
+        storage:
+          - size: 500Mi
     poller:
       resources:
         cpu:
@@ -103,6 +141,9 @@ profiles:
           denom: uakt
           amount: 1000
         caddy:
+          denom: uakt
+          amount: 1000
+        varnish:
           denom: uakt
           amount: 1000
         poller:
@@ -122,6 +163,10 @@ deployment:
   caddy:
     dc1:
       profile: caddy
+      count: 1
+  varnish:
+    dc1:
+      profile: varnish
       count: 1
   poller:
     dc1:

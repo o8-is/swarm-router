@@ -41,7 +41,7 @@ def build_caddy_config(mappings):
                 },
                 {
                     "handler": "reverse_proxy",
-                    "upstreams": [{"dial": "bee:1633"}]
+                    "upstreams": [{"dial": "varnish:8080"}]
                 }
             ],
             "terminal": True
@@ -75,14 +75,26 @@ def build_caddy_config(mappings):
     return {
         "apps": {
             "http": {"servers": {"main": {
-                "routes": routes
-            }}}
+                "listen": [":80", ":443"],
+                "routes": routes,
+                "logs": {}
+            }}},
+            "tls": {
+                "automation": {
+                    "policies": [{
+                        "subjects": subjects,
+                        "issuers": [{
+                            "module": "acme"
+                        }]
+                    }]
+                }
+            }
         }
     }
 
 def send_to_caddy(cfg):
     url = f"{CADDY_ADMIN.rstrip('/')}/load"
-    r = requests.post(url, json=cfg, timeout=10)
+    r = requests.post(url, json=cfg, timeout=30)
     r.raise_for_status()
 
 def build_warmup_config():
@@ -90,6 +102,7 @@ def build_warmup_config():
     return {
         "apps": {
             "http": {"servers": {"main": {
+                "listen": [":80", ":443"],
                 "routes": [{
                     "handle": [{
                         "handler": "static_response",
@@ -118,7 +131,8 @@ def build_warmup_config():
                             "Retry-After": ["30"]
                         }
                     }]
-                }]
+                }],
+                "logs": {}
             }}}
         }
     }
@@ -156,6 +170,19 @@ def main():
         time.sleep(10)
     else:
         print("[WARN] Bee did not finish warming up in time, continuing anyway...")
+
+    # Wait for successful mapping fetch before proceeding
+    print("[INIT] Waiting for mappings feed to be ready...")
+    for attempt in range(30):
+        try:
+            fetch_mappings()
+            print("[INIT] Mappings feed is ready!")
+            break
+        except Exception as e:
+            print(f"[INIT] Waiting for feed (attempt {attempt + 1}/30): {e}")
+            time.sleep(10)
+    else:
+        print("[WARN] Could not fetch mappings, keeping warmup page active")
 
     while True:
         try:
