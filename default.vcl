@@ -36,6 +36,17 @@ sub vcl_recv {
     return (hash);
 }
 
+sub vcl_hit {
+    # Object is stale (expired)
+    if (obj.ttl + obj.grace > 0s) {
+        # Within grace period: serve stale immediately and refresh in background
+        return (deliver);
+    }
+
+    # Beyond grace period: restart request to fetch fresh
+    return (restart);
+}
+
 sub vcl_backend_response {
     # Remove Set-Cookie from backend responses
     unset beresp.http.Set-Cookie;
