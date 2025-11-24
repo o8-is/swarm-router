@@ -1,7 +1,7 @@
 ---
 version: "2.0"
 endpoints:
-  web-ip:
+  router:
     kind: ip
 
 services:
@@ -23,7 +23,7 @@ services:
       - BEE_FULL_NODE=false
       - BEE_SWAP_ENABLE=false
       - BEE_PASSWORD=flummoxedgranitecarrot
-      - BEE_BLOCKCHAIN_RPC_ENDPOINT=https://xdai.fairdatasociety.org
+      - BEE_BLOCKCHAIN_RPC_ENDPOINT=https://gnosis.oat.farm
       - BEE_CORS_ALLOWED_ORIGINS=*
     command:
       - bee
@@ -31,18 +31,18 @@ services:
       - start
 
   caddy:
-    image: ghcr.io/o8-is/swarm-router-caddy:0.1.0
+    image: ghcr.io/o8is/swarm-router-caddy:latest
     expose:
       - port: 80
         as: 80
         to:
           - global: true
-            ip: web-ip
+            ip: router
       - port: 443
         as: 443
         to:
           - global: true
-            ip: web-ip
+            ip: router
     command:
       - caddy
     args:
@@ -76,7 +76,7 @@ services:
       - malloc,256M
 
   gatekeeper:
-    image: ghcr.io/o8-is/swarm-router-gatekeeper:latest
+    image: ghcr.io/o8is/swarm-router-gatekeeper:latest
     expose:
       - port: 9123
         as: 9123
@@ -115,30 +115,27 @@ profiles:
     gatekeeper:
       resources:
         cpu:
-          units: 0.5
+          units: 1
         memory:
-          size: 128Mi
+          size: 512Mi
         storage:
-          - size: 100Mi
+          - size: 512Mi
 
   placement:
     dc1:
       pricing:
         bee:
           denom: uakt
-          amount: 1000
+          amount: 10000
         caddy:
           denom: uakt
-          amount: 1000
+          amount: 10000
         varnish:
           denom: uakt
-          amount: 1000
+          amount: 10000
         gatekeeper:
           denom: uakt
-          amount: 500
-      signedBy:
-        anyOf:
-          - akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63
+          amount: 10000
       attributes:
         host: akash
 
