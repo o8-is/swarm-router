@@ -58,7 +58,7 @@ sub vcl_backend_response {
     }
 
     # Enable grace mode - serve stale content if backend is down
-    set beresp.grace = 1h;
+    set beresp.grace = 24h;
 
     return (deliver);
 }
