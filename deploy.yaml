@@ -50,7 +50,7 @@ services:
       - /etc/caddy/Caddyfile
 
   varnish:
-    image: octalmage/swarm-varnish:0.1.5
+    image: octalmage/swarm-varnish:0.2.2
     expose:
       - port: 8080
         as: 8080
